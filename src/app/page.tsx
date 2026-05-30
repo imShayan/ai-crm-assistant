@@ -1,6 +1,9 @@
 import Sidebar from "@/components/layout/sidebar";
 import Navbar from "@/components/layout/navbar";
 import StatsCard from "@/components/dashboard/stats-card";
+import CustomerTable from "@/components/dashboard/customer-table";
+import {mockCustomers} from "@/lib/mock-data";
+
 
 export default function Home() {
   return (
@@ -17,6 +20,8 @@ export default function Home() {
             <StatsCard title="Meetings" value="84" />
           </div>
         </div>
+
+        <CustomerTable customers={mockCustomers} />
       </div>
     </div>
   );
