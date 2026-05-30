@@ -11,6 +11,7 @@ import AddCustomerForm from "@/components/dashboard/add-customer-form";
 
 export default function Home() {
   const [customers, setCustomers] = useState(mockCustomers);
+  const [editingCustomer, setEditingCustomer] = useState<number | null>(null);
   const handleAddCustomer = (customer: { name: string; email: string; company: string }) => {
   const newCustomer = {
     id: customers.length + 1,
@@ -18,7 +19,11 @@ export default function Home() {
     status: "Pending",
   };
   setCustomers([...customers, newCustomer]);
-};
+  };
+  const handleDeleteCustomer = (id: number) => {    setCustomers(customers.filter((customer) => customer.id !== id));
+  };
+  const handleEditCustomer = (id: number) => {    setEditingCustomer(id);
+  };
 
   return (
     <div className="flex bg-gray-100">
@@ -40,7 +45,11 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-800">Customers</h2>
           </div>
 
-          <CustomerTable customers={customers} />
+          <CustomerTable 
+              customers={customers} 
+              onDeleteCustomer={handleDeleteCustomer} 
+              onEditCustomer={handleEditCustomer}
+            />
 
           <div className="mt-6">
             <h3 className="text-lg font-medium text-gray-800 mb-4">Add New Customer</h3>
