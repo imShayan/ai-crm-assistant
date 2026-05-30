@@ -7,11 +7,13 @@ import StatsCard from "@/components/dashboard/stats-card";
 import CustomerTable from "@/components/dashboard/customer-table";
 import {mockCustomers} from "@/lib/mock-data";
 import AddCustomerForm from "@/components/dashboard/add-customer-form";
-
+import Modal from "@/components/ui/modal";
 
 export default function Home() {
   const [customers, setCustomers] = useState(mockCustomers);
   const [editingCustomer, setEditingCustomer] = useState<number | null>(null);
+  const [ismodalOpen, setIsModalOpen] = useState(false);
+
   const handleAddCustomer = (customer: { name: string; email: string; company: string }) => {
   const newCustomer = {
     id: customers.length + 1,
@@ -43,6 +45,12 @@ export default function Home() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Customers</h2>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Add Customer
+            </button>
           </div>
 
           <CustomerTable 
@@ -52,8 +60,12 @@ export default function Home() {
             />
 
           <div className="mt-6">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">Add New Customer</h3>
-            <AddCustomerForm onAddCustomer={handleAddCustomer} />
+            <Modal isOpen={ismodalOpen} onClose={() => setIsModalOpen(false)}>
+              <AddCustomerForm onAddCustomer={(customer) => {
+                handleAddCustomer(customer);
+                setIsModalOpen(false);
+              }} />
+            </Modal>
           </div>
         </div>  
         

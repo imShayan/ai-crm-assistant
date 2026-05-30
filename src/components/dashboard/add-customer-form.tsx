@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 
-type Props = { onAddCustomer: (customer: { name: string; email: string; company: string }) => void };
+type Props = { 
+  onAddCustomer: (customer: { name: string; email: string; company: string }) => void };
 
 export default function AddCustomerForm({ onAddCustomer }: Props) {
   const [name, setName] = useState("");
@@ -53,6 +54,20 @@ export default function AddCustomerForm({ onAddCustomer }: Props) {
           onChange={(e) => setCompany(e.target.value)}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
         />
+      </div>
+      
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+          status
+        </label>
+        <select
+          id="status"
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="Pending">Pending</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
       </div>
       <button
         type="submit"
