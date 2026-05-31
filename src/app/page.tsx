@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
+import { getCustomers } from "@/lib/services/customer-service";
 import Sidebar from "@/components/layout/sidebar";
 import Navbar from "@/components/layout/navbar";
 import StatsCard from "@/components/dashboard/stats-card";
@@ -10,9 +12,24 @@ import AddCustomerForm from "@/components/dashboard/add-customer-form";
 import Modal from "@/components/ui/modal";
 
 export default function Home() {
-  const [customers, setCustomers] = useState(mockCustomers);
+  const [customers, setCustomers] = useState<{ id: number; name: string; email: string; company: string; status: string; }[]>([]);
   const [editingCustomer, setEditingCustomer] = useState<number | null>(null);
   const [ismodalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadCustomers();
+  }, []);
+
+  async function loadCustomers() {
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+      setIsLoading(false);  
+    } catch (error) {
+      console.error("Failed to load customers:", error);
+    }
+  }
 
   const handleAddCustomer = (customer: { name: string; email: string; company: string }) => {
   const newCustomer = {
@@ -52,12 +69,16 @@ export default function Home() {
               Add Customer
             </button>
           </div>
-
-          <CustomerTable 
+          
+          {isLoading ? (
+            <p>Loading customers...</p>
+          ) : (
+            <CustomerTable 
               customers={customers} 
               onDeleteCustomer={handleDeleteCustomer} 
               onEditCustomer={handleEditCustomer}
             />
+          )}
 
           <div className="mt-6">
             <Modal isOpen={ismodalOpen} onClose={() => setIsModalOpen(false)}>
