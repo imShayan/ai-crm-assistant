@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import { useEffect } from "react";
-import { getCustomers } from "@/lib/services/customer-service";
+import { getCustomers ,addCustomer,deleteCustomer,editCustomer} from "@/lib/services/customer-service";
 import Sidebar from "@/components/layout/sidebar";
 import Navbar from "@/components/layout/navbar";
 import StatsCard from "@/components/dashboard/stats-card";
 import CustomerTable from "@/components/dashboard/customer-table";
-import {mockCustomers} from "@/lib/mock-data";
 import AddCustomerForm from "@/components/dashboard/add-customer-form";
 import Modal from "@/components/ui/modal";
+import { Customer } from "@/types/customer";
 
 export default function Home() {
   const [customers, setCustomers] = useState<{ id: number; name: string; email: string; company: string; status: string; }[]>([]);
-  const [editingCustomer, setEditingCustomer] = useState<number | null>(null);
   const [ismodalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: number; name: string; email: string; company: string; status: string; } | null>(null);
 
   useEffect(() => {
     loadCustomers();
@@ -31,17 +31,47 @@ export default function Home() {
     }
   }
 
-  const handleAddCustomer = (customer: { name: string; email: string; company: string }) => {
+  const handleAddCustomer = async (customer: { name: string; email: string; company: string }) => {
   const newCustomer = {
     id: customers.length + 1,
     ...customer,
     status: "Pending",
   };
+  await addCustomer(customer);
   setCustomers([...customers, newCustomer]);
   };
-  const handleDeleteCustomer = (id: number) => {    setCustomers(customers.filter((customer) => customer.id !== id));
+
+  const handleDeleteCustomer = async (id: number) => {
+    const result = await deleteCustomer(id); 
+    if(result.success) {
+      alert("Customer deleted successfully");
+    } else {
+      alert("Failed to delete customer");
+    }
+    setCustomers(customers.filter((customer) => customer.id !== id));
   };
-  const handleEditCustomer = (id: number) => {    setEditingCustomer(id);
+
+  const handleOpenEditModal = (customer: Customer) => {
+  setSelectedCustomer(customer);
+  setIsModalOpen(true);
+  };
+
+  const handleSaveCustomer = async (customer: { name: string; email: string; company: string; status: string }) => {
+    if (selectedCustomer) {
+      const updatedCustomer = { ...selectedCustomer, ...customer };
+      const { id, ...updates } = updatedCustomer;
+      const result = await editCustomer(id, updates);
+      if (result.success) {
+        alert("Customer updated successfully");
+      } else {
+        alert("Failed to update customer");
+      }
+      setCustomers(customers.map((c) => (c.id === updatedCustomer.id ? updatedCustomer : c)));
+      setSelectedCustomer(null);
+    } else {
+      await handleAddCustomer(customer);
+    }
+    setIsModalOpen(false);
   };
 
   return (
@@ -76,16 +106,16 @@ export default function Home() {
             <CustomerTable 
               customers={customers} 
               onDeleteCustomer={handleDeleteCustomer} 
-              onEditCustomer={handleEditCustomer}
+              onEditCustomer={handleOpenEditModal}
             />
           )}
 
           <div className="mt-6">
-            <Modal isOpen={ismodalOpen} onClose={() => setIsModalOpen(false)}>
-              <AddCustomerForm onAddCustomer={(customer) => {
-                handleAddCustomer(customer);
-                setIsModalOpen(false);
-              }} />
+            <Modal isOpen={ismodalOpen} onClose={() => { setIsModalOpen(false); setSelectedCustomer(null); }}>
+           <AddCustomerForm
+              customer={selectedCustomer}
+              onSave={handleSaveCustomer}       
+            />
             </Modal>
           </div>
         </div>  

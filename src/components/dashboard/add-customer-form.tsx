@@ -1,20 +1,41 @@
 "use client";
-import { useState } from "react";
+import { useState , useEffect } from "react";
+import { Customer } from "@/types/customer";
 
-type Props = { 
-  onAddCustomer: (customer: { name: string; email: string; company: string }) => void };
+type Props = {
+  customer?: Customer | null;
+  onSave: (
+    customer: {
+      name: string;
+      email: string;
+      company: string;
+      status: string;
+    }
+  ) => void;
+};
 
-export default function AddCustomerForm({ onAddCustomer }: Props) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
+export default function AddCustomerForm({ customer, onSave }: Props) {
+  const [name, setName] = useState(customer?.name || "");
+  const [email, setEmail] = useState(customer?.email || "");
+  const [company, setCompany] = useState(customer?.company || "");
+  const [status, setStatus] = useState(customer?.status || "Pending");
+
+  useEffect(() => {
+  if (customer) {
+    setName(customer.name);
+    setEmail(customer.email);
+    setCompany(customer.company);
+    setStatus(customer.status);
+  }
+}, [customer]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onAddCustomer({ name, email, company });
+    onSave({ name, email, company, status });
     setName("");
     setEmail("");
     setCompany("");
+    setStatus("Pending");
   };
 
   return (
@@ -54,14 +75,15 @@ export default function AddCustomerForm({ onAddCustomer }: Props) {
           onChange={(e) => setCompany(e.target.value)}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
         />
-      </div>
-      
+      </div>     
       <div>
         <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-          status
+          Status
         </label>
         <select
           id="status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="Pending">Pending</option>
@@ -73,7 +95,7 @@ export default function AddCustomerForm({ onAddCustomer }: Props) {
         type="submit"
         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
       >
-        Add Customer
+          {customer ? "Update Customer" : "Add Customer"}
       </button>
     </form>
   );

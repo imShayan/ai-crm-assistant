@@ -3,7 +3,7 @@ import { Customer } from '../../types/customer';
 type CustomerTableProps = {
   customers: Customer[];
   onDeleteCustomer?: (id: number) => void;
-  onEditCustomer?: (id: number) => void;
+  onEditCustomer?: (customer: Customer) => void;
 };
 
 export default function CustomerTable({ customers, onDeleteCustomer, onEditCustomer }: CustomerTableProps) {
@@ -45,7 +45,7 @@ export default function CustomerTable({ customers, onDeleteCustomer, onEditCusto
                   <span className="mx-2">|</span>
                 {onEditCustomer && (
                   <button
-                    onClick={() => onEditCustomer(customer.id)}
+                    onClick={() => onEditCustomer(customer)}
                     className="text-blue-600 hover:text-blue-900"
                   >
                     Edit
