@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { signIn ,getCurrentUser } from "@/lib/services/auth-service";
+import { signIn } from "@/lib/services/auth-service";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const handleLogin = async (
     e: React.FormEvent
@@ -18,8 +20,8 @@ export default function LoginPage() {
     );
 
     if (result) {
+      router.replace("/"); // Redirect to dashboard on successful login
       alert("Login successful");
-      console.log(result);
     } else {
       alert("Login failed");
     }

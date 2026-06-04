@@ -10,6 +10,8 @@ import CustomerTable from "@/components/dashboard/customer-table";
 import AddCustomerForm from "@/components/dashboard/add-customer-form";
 import Modal from "@/components/ui/modal";
 import { Customer } from "@/types/customer";
+import {useRouter} from "next/navigation";
+import {getCurrentUser} from "../lib/services/auth-service";
 
 export default function Home() {
   const [customers, setCustomers] = useState<{ id: number; name: string; email: string; company: string; status: string; }[]>([]);
@@ -17,9 +19,20 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: number; name: string; email: string; company: string; status: string; } | null>(null);
 
+  const router = useRouter();
+
   useEffect(() => {
-    loadCustomers();
+    checkAuth();
   }, []);
+
+  async function checkAuth() {
+    const user = await getCurrentUser();
+    if (!user) {
+      router.push("/login");
+    } else {
+      loadCustomers();
+    }
+  } 
 
   async function loadCustomers() {
     try {
