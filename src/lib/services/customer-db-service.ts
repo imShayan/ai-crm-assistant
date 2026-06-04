@@ -2,8 +2,8 @@ import { createClient } from "../../lib/supabase/client";
 
 const supabase = createClient();
 
-export async function getCustomers() {
-  const { data, error } = await supabase.from("customers").select("*");
+export async function getCustomers(user_id: string) {
+  const { data, error } = await supabase.from("customers").select("*").eq("user_id", user_id);
     if (error) {
     console.error("Error fetching customers:", error);
     return [];
@@ -12,7 +12,7 @@ export async function getCustomers() {
   }
 }
 
-export async function addCustomer(customer: { name: string; email: string; company: string }) {
+export async function addCustomer(customer: { name: string; email: string; company: string ,status: string, user_id: string}) {
   const { data, error } = await supabase.from("customers").insert(customer).select();
   if (error) {
     console.error("Error adding customer:", error);

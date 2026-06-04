@@ -4,7 +4,7 @@ export async function getCustomers() {
   return customers;
 }
 
-export async function addCustomer(customer: { name: string; email: string; company: string }) {
+export async function addCustomer(customer: { name: string; email: string; company: string, status: string}) {
   const response = await fetch("/api/customers", {
     method: "POST",
     headers: {

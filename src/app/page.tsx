@@ -44,13 +44,17 @@ export default function Home() {
     }
   }
 
-  const handleAddCustomer = async (customer: { name: string; email: string; company: string }) => {
+  const handleAddCustomer = async (customer: { name: string; email: string; company: string ,status: string }) => {
   const newCustomer = {
     id: customers.length + 1,
     ...customer,
-    status: "Pending",
   };
-  await addCustomer(customer);
+  const result = await addCustomer(customer);
+  if (result.success) {
+    alert("Customer added successfully");
+  } else {
+    alert("Failed to add customer");
+  }     
   setCustomers([...customers, newCustomer]);
   };
 

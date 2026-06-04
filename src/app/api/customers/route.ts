@@ -1,15 +1,39 @@
 import { NextResponse } from "next/server";
 import { getCustomers , addCustomer, deleteCustomer, updateCustomer } from "@/lib/services/customer-db-service"
+import { getCurrentServerUser } from "@/lib/services/server-auth-service";
 
 export async function GET() {
-    const customers = await getCustomers();
+    const user = await getCurrentServerUser();
+
+    if (!user) {
+        return NextResponse.json(
+            { success: false, message: "Unauthorized" },
+            { status: 401 }
+        );
+    }
+
+    const customers = await getCustomers(user.id);
     return NextResponse.json(customers);
 }
 
-export async function POST(request: Request) {  
-    const body = await request.json();
-    const newCustomer = await addCustomer(body);
-    return NextResponse.json({
+export async function POST(request: Request) {
+  const body = await request.json();
+
+  const user = await getCurrentServerUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  const newCustomer = await addCustomer({
+    ...body,
+    user_id: user.id,
+  });
+
+  return NextResponse.json({
     success: true,
     customer: newCustomer,
   });
