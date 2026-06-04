@@ -4,9 +4,10 @@ type CustomerTableProps = {
   customers: Customer[];
   onDeleteCustomer?: (id: number) => void;
   onEditCustomer?: (customer: Customer) => void;
+  onViewCustomer?: (customer: Customer) => void;
 };
 
-export default function CustomerTable({ customers, onDeleteCustomer, onEditCustomer }: CustomerTableProps) {
+export default function CustomerTable({ customers, onDeleteCustomer, onEditCustomer, onViewCustomer }: CustomerTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
@@ -52,6 +53,16 @@ export default function CustomerTable({ customers, onDeleteCustomer, onEditCusto
                   </button>
               )}
 
+                </td>
+              )}
+              {onViewCustomer && (
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <button
+                    onClick={() => onViewCustomer(customer)}
+                    className="text-green-600 hover:text-green-900"
+                  >
+                    View Notes
+                  </button>
                 </td>
               )}
             </tr>

@@ -1,5 +1,6 @@
-import {useRouter} from "next/navigation";
-import {signOut} from "@/lib/services/auth-service";
+import { useRouter } from "next/navigation";
+import { signOut } from "@/lib/services/auth-service";
+
 export default function Navbar() {
   const router = useRouter();
 
