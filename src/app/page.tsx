@@ -30,6 +30,7 @@ export default function Home() {
       status: string;
     }[]
   >([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     id: number;
@@ -41,6 +42,16 @@ export default function Home() {
   const [customerNotes, setCustomerNotes] = useState([]);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  const filteredCustomers = customers.filter(
+    (customer) =>
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.company.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+  const totalCustomers = customers.length;
+  const totalActiveCustomers = customers.filter((customer) => customer.status === "Active").length;
+  const totalPendingCustomers = customers.filter((customer) => customer.status === "Pending").length;
 
   const router = useRouter();
 
@@ -154,18 +165,29 @@ export default function Home() {
 
         <div className="p-6">
           <div className="grid grid-cols-3 gap-6">
-            <StatsCard title="Total Customers" value="1,240" />
-            <StatsCard title="Revenue" value="$12,400" />
-            <StatsCard title="Meetings" value="84" />
+            <StatsCard title="Total Customers" value={totalCustomers.toString()} />
+            <StatsCard title="Active Customers" value={totalActiveCustomers.toString()} />
+            <StatsCard title="Pending Customers" value={totalPendingCustomers.toString()} />
           </div>
         </div>
 
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Customers</h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-semibold text-gray-800">Customers</h2>
+
+              <input
+                type="text"
+                placeholder="Search customers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border rounded px-3 py-2"
+              />
+            </div>
+
             <button
               onClick={() => setIsCustomerFormOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded"
             >
               Add Customer
             </button>
@@ -175,7 +197,7 @@ export default function Home() {
             <p>Loading customers...</p>
           ) : (
             <CustomerTable
-              customers={customers}
+              customers={filteredCustomers}
               onDeleteCustomer={handleDeleteCustomer}
               onEditCustomer={handleOpenEditModal}
               onViewCustomer={handleViewCustomer}
