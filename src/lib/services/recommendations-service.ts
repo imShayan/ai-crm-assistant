@@ -8,12 +8,10 @@ export async function generateRecommendation(customerId: number) {
       customerId,
     }),
   });
-  console.log("API Response:", response);
   return response.json();
 }
 
 export async function fetchRecommendation(customerId: number) {
   const response = await fetch(`/api/recommendation?customerId=${customerId}`);
-  console.log("Fetch Recommendation API Response:", response);
   return response.json();
 }

@@ -13,7 +13,7 @@ export async function getNotes(customerId: number) {
     console.error(error);
     return [];
   }
-  console.log("Fetched Notes:", data);
+
   return data;
 }
 
@@ -32,6 +32,6 @@ export async function addNote(note: {
     console.error(error);
     return null;
   }
-  console.log("New Note Added:", data[0]);
+
   return data[0];
 }

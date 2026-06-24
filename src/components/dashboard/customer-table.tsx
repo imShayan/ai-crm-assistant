@@ -2,7 +2,7 @@ import { Customer } from '../../types/customer';
 
 type CustomerTableProps = {
   customers: Customer[];
-  onDeleteCustomer?: (id: number) => void;
+  onDeleteCustomer?: (customer:Customer) => void;
   onEditCustomer?: (customer: Customer) => void;
   onViewCustomer?: (customer: Customer) => void;
 };
@@ -38,7 +38,7 @@ export default function CustomerTable({ customers, onDeleteCustomer, onEditCusto
               {onDeleteCustomer && (
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
-                    onClick={() => onDeleteCustomer(customer.id)}
+                    onClick={() => onDeleteCustomer(customer)}
                     className="text-red-600 hover:text-red-900"
                   >
                     Delete

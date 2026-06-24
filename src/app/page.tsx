@@ -31,7 +31,8 @@ export default function Home() {
     }[]
   >([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isCustomerLoading, setIsCustomerLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     id: number;
     name: string;
@@ -42,6 +43,10 @@ export default function Home() {
   const [customerNotes, setCustomerNotes] = useState([]);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
+    null,
+  );
 
   const filteredCustomers = customers.filter(
     (customer) =>
@@ -50,8 +55,12 @@ export default function Home() {
       customer.company.toLowerCase().includes(searchTerm.toLowerCase()),
   );
   const totalCustomers = customers.length;
-  const totalActiveCustomers = customers.filter((customer) => customer.status === "Active").length;
-  const totalPendingCustomers = customers.filter((customer) => customer.status === "Pending").length;
+  const totalActiveCustomers = customers.filter(
+    (customer) => customer.status === "Active",
+  ).length;
+  const totalPendingCustomers = customers.filter(
+    (customer) => customer.status === "Pending",
+  ).length;
 
   const router = useRouter();
 
@@ -60,11 +69,17 @@ export default function Home() {
   }, []);
 
   async function checkAuth() {
-    const user = await getCurrentUser();
-    if (!user) {
-      router.push("/login");
-    } else {
-      loadCustomers();
+    try {
+      const user = await getCurrentUser();
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      await loadCustomers();
+    } finally {
+      setIsAuthLoading(false);
     }
   }
 
@@ -72,7 +87,7 @@ export default function Home() {
     try {
       const data = await getCustomers();
       setCustomers(data);
-      setIsLoading(false);
+      setIsCustomerLoading(false);
     } catch (error) {
       console.error("Failed to load customers:", error);
     }
@@ -97,6 +112,18 @@ export default function Home() {
     setCustomers([...customers, newCustomer]);
   };
 
+  const handleDeleteClick = async (customer: Customer) => {
+    setCustomerToDelete(customer);
+    setIsDeleteModalOpen(true);
+  };
+  const confirmDelete = async () => {
+    if (!customerToDelete) return;
+
+    await handleDeleteCustomer(customerToDelete.id);
+
+    setCustomerToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
   const handleDeleteCustomer = async (id: number) => {
     const result = await deleteCustomer(id);
     if (result.success) {
@@ -156,6 +183,10 @@ export default function Home() {
     }
   };
 
+  if (isAuthLoading) {
+    return <p>Authentication Loading...</p>;
+  }
+
   return (
     <div className="flex bg-gray-100">
       <Sidebar />
@@ -165,9 +196,18 @@ export default function Home() {
 
         <div className="p-6">
           <div className="grid grid-cols-3 gap-6">
-            <StatsCard title="Total Customers" value={totalCustomers.toString()} />
-            <StatsCard title="Active Customers" value={totalActiveCustomers.toString()} />
-            <StatsCard title="Pending Customers" value={totalPendingCustomers.toString()} />
+            <StatsCard
+              title="Total Customers"
+              value={totalCustomers.toString()}
+            />
+            <StatsCard
+              title="Active Customers"
+              value={totalActiveCustomers.toString()}
+            />
+            <StatsCard
+              title="Pending Customers"
+              value={totalPendingCustomers.toString()}
+            />
           </div>
         </div>
 
@@ -193,12 +233,12 @@ export default function Home() {
             </button>
           </div>
 
-          {isLoading ? (
+          {isCustomerLoading ? (
             <p>Loading customers...</p>
           ) : (
             <CustomerTable
               customers={filteredCustomers}
-              onDeleteCustomer={handleDeleteCustomer}
+              onDeleteCustomer={handleDeleteClick}
               onEditCustomer={handleOpenEditModal}
               onViewCustomer={handleViewCustomer}
             />
@@ -233,6 +273,47 @@ export default function Home() {
                   onAddNote={handleAddNote}
                 />
               )}
+            </Modal>
+          </div>
+          <div className="mt-6">
+            <Modal
+              isOpen={isDeleteModalOpen}
+              onClose={() => {
+                setIsDeleteModalOpen(false);
+                setCustomerToDelete(null);
+              }}
+            >
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Delete Customer</h2>
+
+                <p className="text-gray-600">
+                  Are you sure you want to delete
+                  <span className="font-semibold">
+                    {" "}
+                    {customerToDelete?.name}
+                  </span>
+                  ?
+                </p>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setIsDeleteModalOpen(false);
+                      setCustomerToDelete(null);
+                    }}
+                    className="px-4 py-2 border rounded"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 bg-red-600 text-white rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             </Modal>
           </div>
         </div>

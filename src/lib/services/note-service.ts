@@ -12,13 +12,11 @@ export async function createNote(
       note,
     }),
   });
-  console.log("Create Note Response:", response);
 
   return response.json();
 }
 
 export async function getNotes(customerId: number) {
   const response = await fetch(`/api/notes?customerId=${customerId}`);
-  console.log("Get Notes Response:", response);
   return response.json();
 }   
