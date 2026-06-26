@@ -2,12 +2,6 @@
 
 import { useState } from "react";
 import { useEffect } from "react";
-import {
-  getCustomers,
-  addCustomer,
-  deleteCustomer,
-  editCustomer,
-} from "@/lib/services/customer-service";
 import Sidebar from "@/components/layout/sidebar";
 import Navbar from "@/components/layout/navbar";
 import StatsCard from "@/components/dashboard/stats-card";
@@ -19,19 +13,11 @@ import { useRouter } from "next/navigation";
 import { getCurrentUser } from "../lib/services/auth-service";
 import { getNotes, createNote } from "../lib/services/note-service";
 import CustomerDetail from "@/components/dashboard/customer-details";
+import { useCustomers } from "@/hooks/useCustomers";
 
 export default function Home() {
-  const [customers, setCustomers] = useState<
-    {
-      id: number;
-      name: string;
-      email: string;
-      company: string;
-      status: string;
-    }[]
-  >([]);
+  const {customers , isCustomerLoading ,loadCustomers , addCustomer , deleteCustomer, updateCustomer} = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCustomerLoading, setIsCustomerLoading] = useState(true);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     id: number;
@@ -83,34 +69,7 @@ export default function Home() {
     }
   }
 
-  async function loadCustomers() {
-    try {
-      const data = await getCustomers();
-      setCustomers(data);
-      setIsCustomerLoading(false);
-    } catch (error) {
-      console.error("Failed to load customers:", error);
-    }
-  }
 
-  const handleAddCustomer = async (customer: {
-    name: string;
-    email: string;
-    company: string;
-    status: string;
-  }) => {
-    const newCustomer = {
-      id: customers.length + 1,
-      ...customer,
-    };
-    const result = await addCustomer(customer);
-    if (result.success) {
-      alert("Customer added successfully");
-    } else {
-      alert("Failed to add customer");
-    }
-    setCustomers([...customers, newCustomer]);
-  };
 
   const handleDeleteClick = async (customer: Customer) => {
     setCustomerToDelete(customer);
@@ -119,19 +78,10 @@ export default function Home() {
   const confirmDelete = async () => {
     if (!customerToDelete) return;
 
-    await handleDeleteCustomer(customerToDelete.id);
+    await deleteCustomer(customerToDelete.id);
 
     setCustomerToDelete(null);
     setIsDeleteModalOpen(false);
-  };
-  const handleDeleteCustomer = async (id: number) => {
-    const result = await deleteCustomer(id);
-    if (result.success) {
-      alert("Customer deleted successfully");
-    } else {
-      alert("Failed to delete customer");
-    }
-    setCustomers(customers.filter((customer) => customer.id !== id));
   };
 
   const handleOpenEditModal = (customer: Customer) => {
@@ -139,32 +89,21 @@ export default function Home() {
     setIsCustomerFormOpen(true);
   };
 
-  const handleSaveCustomer = async (customer: {
+const handleSaveCustomer = async (customer:{
     name: string;
     email: string;
     company: string;
     status: string;
   }) => {
-    if (selectedCustomer) {
-      const updatedCustomer = { ...selectedCustomer, ...customer };
-      const { id, ...updates } = updatedCustomer;
-      const result = await editCustomer(id, updates);
-      if (result.success) {
-        alert("Customer updated successfully");
-      } else {
-        alert("Failed to update customer");
-      }
-      setCustomers(
-        customers.map((c) =>
-          c.id === updatedCustomer.id ? updatedCustomer : c,
-        ),
-      );
-      setSelectedCustomer(null);
-    } else {
-      await handleAddCustomer(customer);
-    }
-    setIsCustomerFormOpen(false);
-  };
+  if (selectedCustomer) {
+    await updateCustomer(selectedCustomer.id, customer);
+    setSelectedCustomer(null);
+  } else {
+    await addCustomer(customer);
+  }
+
+  setIsCustomerFormOpen(false);
+};
 
   const handleViewCustomer = async (customer: Customer) => {
     setSelectedCustomer(customer);
