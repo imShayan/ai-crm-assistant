@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {
   getCustomers as getCustomerService,
-  addCustomer  as addCustomerService,
+  addCustomer as addCustomerService,
   deleteCustomer as deleteCustomerService,
-  editCustomer as editCustomerService
+  editCustomer as editCustomerService,
 } from "@/lib/services/customer-service";
 
 export function useCustomers() {
@@ -56,31 +56,29 @@ export function useCustomers() {
     }
     setCustomers(customers.filter((customer) => customer.id !== id));
   };
-const updateCustomer = async (
-  id: number,
-  updates: {
-    name: string;
-    email: string;
-    company: string;
-    status: string;
-  }
-) => {
-  const result = await editCustomerService(id, updates);
+  const updateCustomer = async (
+    id: number,
+    updates: {
+      name: string;
+      email: string;
+      company: string;
+      status: string;
+    },
+  ) => {
+    const result = await editCustomerService(id, updates);
 
-  if (result.success) {
-    alert("Customer updated successfully");
+    if (result.success) {
+      alert("Customer updated successfully");
 
-    setCustomers((prevCustomers) =>
-      prevCustomers.map((customer) =>
-        customer.id === id
-          ? { ...customer, ...updates }
-          : customer
-      )
-    );
-  } else {
-    alert("Failed to update customer");
-  }
-};
+      setCustomers((prevCustomers) =>
+        prevCustomers.map((customer) =>
+          customer.id === id ? { ...customer, ...updates } : customer,
+        ),
+      );
+    } else {
+      alert("Failed to update customer");
+    }
+  };
 
   //function
   return {
@@ -89,6 +87,6 @@ const updateCustomer = async (
     loadCustomers,
     addCustomer,
     deleteCustomer,
-    updateCustomer
+    updateCustomer,
   };
 }

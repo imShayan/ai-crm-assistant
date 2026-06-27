@@ -11,12 +11,20 @@ import Modal from "@/components/ui/modal";
 import { Customer } from "@/types/customer";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "../lib/services/auth-service";
-import { getNotes, createNote } from "../lib/services/note-service";
 import CustomerDetail from "@/components/dashboard/customer-details";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useNotes } from "@/hooks/useNotes";
 
 export default function Home() {
-  const {customers , isCustomerLoading ,loadCustomers , addCustomer , deleteCustomer, updateCustomer} = useCustomers();
+  const {
+    customers,
+    isCustomerLoading,
+    loadCustomers,
+    addCustomer,
+    deleteCustomer,
+    updateCustomer,
+  } = useCustomers();
+  const { customerNotes, loadNotes, addNote } = useNotes();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<{
@@ -26,7 +34,6 @@ export default function Home() {
     company: string;
     status: string;
   } | null>(null);
-  const [customerNotes, setCustomerNotes] = useState([]);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -69,8 +76,6 @@ export default function Home() {
     }
   }
 
-
-
   const handleDeleteClick = async (customer: Customer) => {
     setCustomerToDelete(customer);
     setIsDeleteModalOpen(true);
@@ -89,37 +94,26 @@ export default function Home() {
     setIsCustomerFormOpen(true);
   };
 
-const handleSaveCustomer = async (customer:{
+  const handleSaveCustomer = async (customer: {
     name: string;
     email: string;
     company: string;
     status: string;
   }) => {
-  if (selectedCustomer) {
-    await updateCustomer(selectedCustomer.id, customer);
-    setSelectedCustomer(null);
-  } else {
-    await addCustomer(customer);
-  }
+    if (selectedCustomer) {
+      await updateCustomer(selectedCustomer.id, customer);
+      setSelectedCustomer(null);
+    } else {
+      await addCustomer(customer);
+    }
 
-  setIsCustomerFormOpen(false);
-};
+    setIsCustomerFormOpen(false);
+  };
 
   const handleViewCustomer = async (customer: Customer) => {
     setSelectedCustomer(customer);
-    const response = await getNotes(customer.id);
-    setCustomerNotes(response.notes);
+    await loadNotes(customer.id);
     setIsDetailsModalOpen(true);
-  };
-  const handleAddNote = async (customerId: number, note: string) => {
-    try {
-      await createNote(customerId, note);
-      // Refresh the notes after adding a new one
-      const response = await getNotes(customerId);
-      setCustomerNotes(response.notes);
-    } catch (error) {
-      console.error("Failed to add note:", error);
-    }
   };
 
   if (isAuthLoading) {
@@ -209,7 +203,7 @@ const handleSaveCustomer = async (customer:{
                 <CustomerDetail
                   customer={selectedCustomer}
                   notes={customerNotes}
-                  onAddNote={handleAddNote}
+                  onAddNote={addNote}
                 />
               )}
             </Modal>
