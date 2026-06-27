@@ -9,11 +9,10 @@ import CustomerTable from "@/components/dashboard/customer-table";
 import AddCustomerForm from "@/components/dashboard/add-customer-form";
 import Modal from "@/components/ui/modal";
 import { Customer } from "@/types/customer";
-import { useRouter } from "next/navigation";
-import { getCurrentUser } from "../lib/services/auth-service";
 import CustomerDetail from "@/components/dashboard/customer-details";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useNotes } from "@/hooks/useNotes";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
   const {
@@ -25,8 +24,8 @@ export default function Home() {
     updateCustomer,
   } = useCustomers();
   const { customerNotes, loadNotes, addNote } = useNotes();
+  const {  isAuthLoading, checkAuth} = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     id: number;
     name: string;
@@ -55,26 +54,16 @@ export default function Home() {
     (customer) => customer.status === "Pending",
   ).length;
 
-  const router = useRouter();
-
   useEffect(() => {
-    checkAuth();
-  }, []);
+    async function initialize(){
+      const authenticated = await checkAuth();
 
-  async function checkAuth() {
-    try {
-      const user = await getCurrentUser();
-
-      if (!user) {
-        router.replace("/login");
-        return;
+      if(authenticated){
+        await loadCustomers()
       }
-
-      await loadCustomers();
-    } finally {
-      setIsAuthLoading(false);
     }
-  }
+    initialize();
+  }, []);
 
   const handleDeleteClick = async (customer: Customer) => {
     setCustomerToDelete(customer);
