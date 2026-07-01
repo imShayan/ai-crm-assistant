@@ -6,13 +6,14 @@ import Sidebar from "@/components/layout/sidebar";
 import Navbar from "@/components/layout/navbar";
 import StatsCard from "@/components/dashboard/stats-card";
 import CustomerTable from "@/components/dashboard/customer-table";
-import AddCustomerForm from "@/components/dashboard/add-customer-form";
-import Modal from "@/components/ui/modal";
+
 import { Customer } from "@/types/customer";
-import CustomerDetail from "@/components/dashboard/customer-details";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useNotes } from "@/hooks/useNotes";
 import { useAuth } from "@/hooks/useAuth";
+import CustomerFormModal from "@/components/dashboard/modals/CustomerFormModal";
+import CustomerDetailModal from "@/components/dashboard/modals/CustomerDetailModal";
+import DeleteCustomerModal from "@/components/dashboard/modals/DeleteCustomerModal";
 
 export default function Home() {
   const {
@@ -26,13 +27,7 @@ export default function Home() {
   const { customerNotes, loadNotes, addNote } = useNotes();
   const {  isAuthLoading, checkAuth} = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<{
-    id: number;
-    name: string;
-    email: string;
-    company: string;
-    status: string;
-  } | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -166,78 +161,35 @@ export default function Home() {
             />
           )}
 
-          <div className="mt-6">
-            <Modal
+            <CustomerFormModal
               isOpen={isCustomerFormOpen}
+              customer={selectedCustomer}
               onClose={() => {
                 setIsCustomerFormOpen(false);
                 setSelectedCustomer(null);
               }}
-            >
-              <AddCustomerForm
+              onSave={handleSaveCustomer}
+            />
+              <CustomerDetailModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => {
+                  setIsDetailsModalOpen(false);
+                  setSelectedCustomer(null);
+                }}
                 customer={selectedCustomer}
-                onSave={handleSaveCustomer}
+                notes={customerNotes}
+                onAddNote={addNote}
               />
-            </Modal>
-          </div>
-          <div className="mt-6">
-            <Modal
-              isOpen={isDetailsModalOpen}
-              onClose={() => {
-                setIsDetailsModalOpen(false);
-                setSelectedCustomer(null);
-              }}
-            >
-              {selectedCustomer && (
-                <CustomerDetail
-                  customer={selectedCustomer}
-                  notes={customerNotes}
-                  onAddNote={addNote}
-                />
-              )}
-            </Modal>
-          </div>
-          <div className="mt-6">
-            <Modal
-              isOpen={isDeleteModalOpen}
-              onClose={() => {
+          
+            <DeleteCustomerModal
+              isOpen= {isDeleteModalOpen}
+               onClose={() => {
                 setIsDeleteModalOpen(false);
                 setCustomerToDelete(null);
               }}
-            >
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Delete Customer</h2>
-
-                <p className="text-gray-600">
-                  Are you sure you want to delete
-                  <span className="font-semibold">
-                    {" "}
-                    {customerToDelete?.name}
-                  </span>
-                  ?
-                </p>
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => {
-                      setIsDeleteModalOpen(false);
-                      setCustomerToDelete(null);
-                    }}
-                    className="px-4 py-2 border rounded"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    onClick={confirmDelete}
-                    className="px-4 py-2 bg-red-600 text-white rounded"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </Modal>
-          </div>
+              onDelete={confirmDelete}
+              customerName={customerToDelete}
+            />
         </div>
       </div>
     </div>
