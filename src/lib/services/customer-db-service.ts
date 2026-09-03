@@ -22,18 +22,28 @@ export async function addCustomer(customer: { name: string; email: string; compa
   }
 }
 
-export async function deleteCustomer(id: number) {
-  const { error } = await supabase.from("customers").delete().eq("id", id);
+export async function deleteCustomer(id: number, user_id: string) {
+  const { data, error } = await supabase
+    .from("customers")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user_id)
+    .select("id");
   if (error) {
     console.error("Error deleting customer:", error);
     return null;
   } else {
-    return true;
+    return data.length > 0;
   }
 }
 
-export async function updateCustomer(id: number, updates: { name?: string; email?: string; company?: string; status?: string }) {
-  const { data, error } = await supabase.from("customers").update(updates).eq("id", id).select();  
+export async function updateCustomer(id: number, user_id: string, updates: { name?: string; email?: string; company?: string; status?: string }) {
+  const { data, error } = await supabase
+    .from("customers")
+    .update(updates)
+    .eq("id", id)
+    .eq("user_id", user_id)
+    .select();
     if (error) {
     console.error("Error updating customer:", error);
     return null;
@@ -41,4 +51,3 @@ export async function updateCustomer(id: number, updates: { name?: string; email
     return data[0];
   } 
 }
-
