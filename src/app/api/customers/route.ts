@@ -40,27 +40,73 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const user = await getCurrentServerUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  const result = await deleteCustomer(Number(id));  
-    if (result) {
+  const customerId = Number(id);
+
+  if (!id || !/^\d+$/.test(id) || !Number.isSafeInteger(customerId) || customerId <= 0) {
+    return NextResponse.json(
+      { success: false, message: "Invalid customer ID" },
+      { status: 400 }
+    );
+  }
+
+  const result = await deleteCustomer(customerId, user.id);
+  if (result === true) {
     return NextResponse.json({ success: true });
-  } else {
-    return NextResponse.json({ success: false }, { status: 500 });
-  } 
+  } else if (result === false) {
+    return NextResponse.json(
+      { success: false, message: "Customer not found" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({ success: false }, { status: 500 });
 }
 
 export async function PUT(request: Request) {
+  const user = await getCurrentServerUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
+  const customerId = Number(id);
+
+  if (!id || !/^\d+$/.test(id) || !Number.isSafeInteger(customerId) || customerId <= 0) {
+    return NextResponse.json(
+      { success: false, message: "Invalid customer ID" },
+      { status: 400 }
+    );
+  }
+
   const body = await request.json();
-  const updatedCustomer = await updateCustomer(Number(id), body);
-    if (updatedCustomer) {
+  const updatedCustomer = await updateCustomer(customerId, user.id, body);
+  if (updatedCustomer) {
     return NextResponse.json({
       success: true,
       customer: updatedCustomer,
     });
-  } else {
-    return NextResponse.json({ success: false }, { status: 500 });
-  } 
+  } else if (updatedCustomer === undefined) {
+    return NextResponse.json(
+      { success: false, message: "Customer not found" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({ success: false }, { status: 500 });
 }
