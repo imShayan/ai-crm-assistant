@@ -13,19 +13,19 @@ export async function saveSummary(summary:  {
     .select();
     if (error) {
         console.error(error);
-        return null;
     }
 
-    return data[0]; 
+    return { summary: data?.[0] ?? null, error };
 };
 
 
-export async function getSummary(customerId: number) {
+export async function getSummary(customerId: number, userId: string) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
     .from("customer_summaries")
     .select("*")
     .eq("customer_id", customerId)
+    .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1);
     if (error) {
