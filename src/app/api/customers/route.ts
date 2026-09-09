@@ -77,7 +77,11 @@ export async function GET() {
         );
     }
 
-    const customers = await getCustomers(user.id);
+    const { data: customers, error } = await getCustomers(user.id);
+    if (error || !customers) {
+      return NextResponse.json({ success: false }, { status: 500 });
+    }
+
     return NextResponse.json(customers);
 }
 
@@ -101,10 +105,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const newCustomer = await addCustomer({
+  const { data: newCustomer, error } = await addCustomer({
     ...(validation.data as CustomerInput),
     user_id: user.id,
   });
+
+  if (error || !newCustomer) {
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
 
   return NextResponse.json({
     success: true,
@@ -133,17 +141,19 @@ export async function DELETE(request: Request) {
     );
   }
 
-  const result = await deleteCustomer(customerId, user.id);
-  if (result === true) {
+  const { data: deleted, error } = await deleteCustomer(customerId, user.id);
+  if (error) {
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
+
+  if (deleted) {
     return NextResponse.json({ success: true });
-  } else if (result === false) {
+  } else {
     return NextResponse.json(
       { success: false, message: "Customer not found" },
       { status: 404 }
     );
   }
-
-  return NextResponse.json({ success: false }, { status: 500 });
 }
 
 export async function PUT(request: Request) {
@@ -177,18 +187,24 @@ export async function PUT(request: Request) {
     );
   }
 
-  const updatedCustomer = await updateCustomer(customerId, user.id, validation.data);
+  const { data: updatedCustomer, error } = await updateCustomer(
+    customerId,
+    user.id,
+    validation.data,
+  );
+  if (error) {
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
+
   if (updatedCustomer) {
     return NextResponse.json({
       success: true,
       customer: updatedCustomer,
     });
-  } else if (updatedCustomer === undefined) {
+  } else {
     return NextResponse.json(
       { success: false, message: "Customer not found" },
       { status: 404 }
     );
   }
-
-  return NextResponse.json({ success: false }, { status: 500 });
 }
