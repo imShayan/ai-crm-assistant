@@ -1,10 +1,11 @@
 import { createSupabaseServerClient } from "../supabase/server";
+import type { DatabaseResult } from "./database-result";
 
 export async function saveRecommendation(recommendation: {
   customer_id: number;
   user_id: string;
   recommendation: string;
-}) {
+}): Promise<DatabaseResult<Record<string, unknown>>> {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -16,10 +17,16 @@ export async function saveRecommendation(recommendation: {
     console.error(error);
   }
 
-  return { recommendation: data?.[0] ?? null, error };
+  return {
+    data: data?.[0] ?? null,
+    error: error ? new Error(error.message) : null,
+  };
 }
 
-export async function getRecommendation(customerId: number, userId: string) {
+export async function getRecommendation(
+  customerId: number,
+  userId: string,
+): Promise<DatabaseResult<Record<string, unknown>>> {
 
   const supabase = await createSupabaseServerClient();
 
@@ -33,8 +40,10 @@ export async function getRecommendation(customerId: number, userId: string) {
 
   if (error) {
     console.error(error);
-    return null;
   }
 
-  return data[0];
+  return {
+    data: data?.[0] ?? null,
+    error: error ? new Error(error.message) : null,
+  };
 }

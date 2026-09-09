@@ -48,20 +48,20 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: "Customer not found" }, { status: 404 });
     }
 
-    const { notes, error: notesError } = await getNotes(customerId, user.id);
-    if (notesError) {
+    const { data: notes, error: notesError } = await getNotes(customerId, user.id);
+    if (notesError || !notes) {
         return NextResponse.json({ success: false }, { status: 500 });
     }
 
     const summaryText = await generateSummary(notes.map(note => note.note));
   
-    const savedSummary = await saveSummary({
+    const { data: savedSummary, error: summaryError } = await saveSummary({
         customer_id: customerId,
         user_id: user.id,
         summary: summaryText
     });
 
-    if (!savedSummary) {
+    if (summaryError || !savedSummary) {
         return NextResponse.json({ success: false }, { status: 500 });
     }
   
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: "Customer not found" }, { status: 404 });
     }
 
-    const { summary, error: summaryError } = await getSummary(customerId, user.id);
+    const { data: summary, error: summaryError } = await getSummary(customerId, user.id);
     if (summaryError) {
         return NextResponse.json({ success: false }, { status: 500 });
     }

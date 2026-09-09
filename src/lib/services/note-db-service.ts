@@ -1,7 +1,11 @@
 import {createSupabaseServerClient} from "../supabase/server";
+import type { DatabaseResult } from "./database-result";
 
 
-export async function getNotes(customerId: number, userId: string) {
+export async function getNotes(
+  customerId: number,
+  userId: string,
+): Promise<DatabaseResult<Array<{ note: string }>>> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("customer_notes")
@@ -14,14 +18,17 @@ export async function getNotes(customerId: number, userId: string) {
     console.error(error);
   }
 
-  return { notes: data ?? [], error };
+  return {
+    data: data ?? [],
+    error: error ? new Error(error.message) : null,
+  };
 }
 
 export async function addNote(note: {
   customer_id: number;
   user_id: string;
   note: string;
-}) {
+}): Promise<DatabaseResult<Record<string, unknown>>> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("customer_notes")
@@ -30,8 +37,8 @@ export async function addNote(note: {
 
   if (error) {
     console.error(error);
-    return null;
+    return { data: null, error: new Error(error.message) };
   }
 
-  return data[0];
+  return { data: data[0] ?? null, error: null };
 }

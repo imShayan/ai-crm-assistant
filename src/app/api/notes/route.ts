@@ -62,13 +62,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "Customer not found" }, { status: 404 });
   }
 
-  const newNote = await addNote({
+  const { data: newNote, error: noteError } = await addNote({
     customer_id: body.customer_id,
     note: body.note.trim(),
     user_id: user.id,
   });
 
-  if (!newNote) {
+  if (noteError || !newNote) {
     return NextResponse.json({ success: false }, { status: 500 });
   }
 
@@ -102,8 +102,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: "Customer not found" }, { status: 404 });
   }
 
-  const { notes, error: notesError } = await getNotes(customerId, user.id);
-  if (notesError) {
+  const { data: notes, error: notesError } = await getNotes(customerId, user.id);
+  if (notesError || !notes) {
     return NextResponse.json({ success: false }, { status: 500 });
   }
 

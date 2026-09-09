@@ -1,10 +1,11 @@
 import {createSupabaseServerClient} from "../supabase/server";
+import type { DatabaseResult } from "./database-result";
 
 export async function saveSummary(summary:  {
   customer_id: number;
   user_id: string;
   summary: string;
-}) {
+}): Promise<DatabaseResult<Record<string, unknown>>> {
     const supabase= await createSupabaseServerClient();
 
     const { data, error } = await supabase
@@ -15,11 +16,17 @@ export async function saveSummary(summary:  {
         console.error(error);
     }
 
-    return { summary: data?.[0] ?? null, error };
+    return {
+        data: data?.[0] ?? null,
+        error: error ? new Error(error.message) : null,
+    };
 };
 
 
-export async function getSummary(customerId: number, userId: string) {
+export async function getSummary(
+    customerId: number,
+    userId: string,
+): Promise<DatabaseResult<Record<string, unknown>>> {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
     .from("customer_summaries")
@@ -30,8 +37,10 @@ export async function getSummary(customerId: number, userId: string) {
     .limit(1);
     if (error) {
         console.error(error);
-        return null;
     }   
     
-    return data[0];
+    return {
+        data: data?.[0] ?? null,
+        error: error ? new Error(error.message) : null,
+    };
 };
