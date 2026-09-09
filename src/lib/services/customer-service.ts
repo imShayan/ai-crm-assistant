@@ -1,10 +1,25 @@
-export async function getCustomers() {
-  const response = await fetch("/api/customers");
-  const customers = await response.json();
-  return customers;
+import type { Customer } from "@/types/customer";
+
+async function readResponse<T>(response: Response): Promise<T> {
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.message ?? "Customer request failed");
+  }
+
+  return result;
 }
 
-export async function addCustomer(customer: { name: string; email: string; company: string, status: string}) {
+export async function getCustomers() {
+  const response = await fetch("/api/customers");
+  return readResponse<Customer[]>(response);
+}
+
+export async function addCustomer(customer: {
+  name: string;
+  email: string;
+  company: string;
+  status: string;
+}) {
   const response = await fetch("/api/customers", {
     method: "POST",
     headers: {
@@ -12,19 +27,22 @@ export async function addCustomer(customer: { name: string; email: string; compa
     },
     body: JSON.stringify(customer),
   });
-  const result = await response.json();
-  return result;
+  return readResponse<{ success: boolean; customer?: Customer }>(response);
 }
 
 export async function deleteCustomer(id: number) {
   const response = await fetch(`/api/customers?id=${id}`, {
     method: "DELETE",
   });
-  const result = await response.json();
-  return result;
+  return readResponse<{ success: boolean }>(response);
 }
 
-export async function editCustomer(id: number, customer: { name: string; email: string; company: string }) {
+export async function editCustomer(id: number, customer: {
+  name: string;
+  email: string;
+  company: string;
+  status: string;
+}) {
   const response = await fetch(`/api/customers?id=${id}`, {
     method: "PUT",
     headers: {
@@ -32,6 +50,5 @@ export async function editCustomer(id: number, customer: { name: string; email: 
     },
     body: JSON.stringify(customer),
   });
-  const result = await response.json();
-  return result;
+  return readResponse<{ success: boolean; customer?: Customer }>(response);
 }

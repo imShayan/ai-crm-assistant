@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { Customer } from "@/types/customer";
 import {
   getCustomers as getCustomerService,
   addCustomer as addCustomerService,
@@ -8,15 +9,7 @@ import {
 
 export function useCustomers() {
   //state
-  const [customers, setCustomers] = useState<
-    {
-      id: number;
-      name: string;
-      email: string;
-      company: string;
-      status: string;
-    }[]
-  >([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isCustomerLoading, setIsCustomerLoading] = useState(true);
 
   async function loadCustomers() {
@@ -34,27 +27,36 @@ export function useCustomers() {
     company: string;
     status: string;
   }) => {
-    const newCustomer = {
-      id: customers.length + 1,
-      ...customer,
-    };
-    const result = await addCustomerService(customer);
-    if (result.success) {
-      alert("Customer added successfully");
-    } else {
+    try {
+      const result = await addCustomerService(customer);
+      const savedCustomer = result.customer;
+      if (result.success && savedCustomer) {
+        alert("Customer added successfully");
+        setCustomers((currentCustomers) => [...currentCustomers, savedCustomer]);
+      } else {
+        alert("Failed to add customer");
+      }
+    } catch (error) {
+      console.error("Failed to add customer:", error);
       alert("Failed to add customer");
     }
-    setCustomers([...customers, newCustomer]);
   };
 
   const deleteCustomer = async (id: number) => {
-    const result = await deleteCustomerService(id);
-    if (result.success) {
-      alert("Customer deleted successfully");
-    } else {
+    try {
+      const result = await deleteCustomerService(id);
+      if (result.success) {
+        alert("Customer deleted successfully");
+        setCustomers((currentCustomers) =>
+          currentCustomers.filter((customer) => customer.id !== id),
+        );
+      } else {
+        alert("Failed to delete customer");
+      }
+    } catch (error) {
+      console.error("Failed to delete customer:", error);
       alert("Failed to delete customer");
     }
-    setCustomers(customers.filter((customer) => customer.id !== id));
   };
   const updateCustomer = async (
     id: number,
@@ -65,17 +67,23 @@ export function useCustomers() {
       status: string;
     },
   ) => {
-    const result = await editCustomerService(id, updates);
+    try {
+      const result = await editCustomerService(id, updates);
+      const savedCustomer = result.customer;
 
-    if (result.success) {
-      alert("Customer updated successfully");
+      if (result.success && savedCustomer) {
+        alert("Customer updated successfully");
 
-      setCustomers((prevCustomers) =>
-        prevCustomers.map((customer) =>
-          customer.id === id ? { ...customer, ...updates } : customer,
-        ),
-      );
-    } else {
+        setCustomers((prevCustomers) =>
+          prevCustomers.map((customer) =>
+            customer.id === id ? savedCustomer : customer,
+          ),
+        );
+      } else {
+        alert("Failed to update customer");
+      }
+    } catch (error) {
+      console.error("Failed to update customer:", error);
       alert("Failed to update customer");
     }
   };
