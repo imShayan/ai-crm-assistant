@@ -62,20 +62,26 @@ beforeEach(() => {
     error: null,
   });
   mocks.getNotes.mockResolvedValue({
-    notes: [{ note: "Discussed pricing" }],
+    data: [{ note: "Discussed pricing" }],
     error: null,
   });
-  mocks.addNote.mockResolvedValue({ id: 1, customer_id: 42, user_id: user.id });
+  mocks.addNote.mockResolvedValue({
+    data: { id: 1, customer_id: 42, user_id: user.id },
+    error: null,
+  });
   mocks.generateSummary.mockResolvedValue("Summary");
-  mocks.saveSummary.mockResolvedValue({ summary: "Summary" });
+  mocks.saveSummary.mockResolvedValue({ data: { summary: "Summary" }, error: null });
   mocks.generateRecommendation.mockResolvedValue("Recommendation");
-  mocks.saveRecommendation.mockResolvedValue({ recommendation: "Recommendation" });
+  mocks.saveRecommendation.mockResolvedValue({
+    data: { recommendation: "Recommendation" },
+    error: null,
+  });
   mocks.getSummary.mockResolvedValue({
-    summary: { summary: "Summary" },
+    data: { summary: "Summary" },
     error: null,
   });
   mocks.getRecommendation.mockResolvedValue({
-    recommendation: { recommendation: "Recommendation" },
+    data: { recommendation: "Recommendation" },
     error: null,
   });
 });
@@ -229,12 +235,80 @@ describe("recommendation authorization", () => {
 describe("subresource database failures", () => {
   it("returns 500 instead of treating a notes query failure as an empty list", async () => {
     mocks.getNotes.mockResolvedValue({
-      notes: [],
+      data: [],
       error: new Error("database unavailable"),
     });
 
     const response = await notesRoute.GET(
       new Request("http://localhost/api/notes?customerId=42"),
+    );
+
+    expect(response.status).toBe(500);
+  });
+
+  it("returns 500 when creating a note fails", async () => {
+    mocks.addNote.mockResolvedValue({
+      data: null,
+      error: new Error("database unavailable"),
+    });
+
+    const response = await notesRoute.POST(
+      jsonRequest("http://localhost/api/notes", {
+        customer_id: 42,
+        note: "Attempted note",
+      }),
+    );
+
+    expect(response.status).toBe(500);
+  });
+
+  it("returns 500 when reading a summary fails", async () => {
+    mocks.getSummary.mockResolvedValue({
+      data: null,
+      error: new Error("database unavailable"),
+    });
+
+    const response = await summaryRoute.GET(
+      new Request("http://localhost/api/summary?customerId=42"),
+    );
+
+    expect(response.status).toBe(500);
+  });
+
+  it("returns 500 when saving a summary fails", async () => {
+    mocks.saveSummary.mockResolvedValue({
+      data: null,
+      error: new Error("database unavailable"),
+    });
+
+    const response = await summaryRoute.POST(
+      jsonRequest("http://localhost/api/summary", { customerId: 42 }),
+    );
+
+    expect(response.status).toBe(500);
+  });
+
+  it("returns 500 when reading a recommendation fails", async () => {
+    mocks.getRecommendation.mockResolvedValue({
+      data: null,
+      error: new Error("database unavailable"),
+    });
+
+    const response = await recommendationRoute.GET(
+      new Request("http://localhost/api/recommendation?customerId=42"),
+    );
+
+    expect(response.status).toBe(500);
+  });
+
+  it("returns 500 when saving a recommendation fails", async () => {
+    mocks.saveRecommendation.mockResolvedValue({
+      data: null,
+      error: new Error("database unavailable"),
+    });
+
+    const response = await recommendationRoute.POST(
+      jsonRequest("http://localhost/api/recommendation", { customerId: 42 }),
     );
 
     expect(response.status).toBe(500);

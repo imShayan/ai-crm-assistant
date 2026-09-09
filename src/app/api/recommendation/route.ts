@@ -57,8 +57,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "Customer not found" }, { status: 404 });
   }
 
-  const { notes, error: notesError } = await getNotes(customerId, user.id);
-  if (notesError) {
+  const { data: notes, error: notesError } = await getNotes(customerId, user.id);
+  if (notesError || !notes) {
     return NextResponse.json({ success: false }, { status: 500 });
   }
 
@@ -66,13 +66,13 @@ export async function POST(request: Request) {
     notes.map((note) => note.note),
   );
 
-  const savedRecommendation = await saveRecommendation({
+  const { data: savedRecommendation, error: recommendationError } = await saveRecommendation({
     customer_id: customerId,
     user_id: user.id,
     recommendation: recommendationText,
   });
 
-  if (!savedRecommendation) {
+  if (recommendationError || !savedRecommendation) {
     return NextResponse.json({ success: false }, { status: 500 });
   }
 
@@ -103,7 +103,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, message: "Customer not found" }, { status: 404 });
   }
 
-  const { recommendation, error: recommendationError } = await getRecommendation(
+  const { data: recommendation, error: recommendationError } = await getRecommendation(
     customerId,
     user.id,
   );
