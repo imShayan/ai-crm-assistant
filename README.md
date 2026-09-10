@@ -121,10 +121,11 @@ npm run lint
 
 ## Current engineering status
 
-- The repository does not currently contain Supabase migrations, a
-  `supabase/config.toml`, or Supabase CLI scripts.
-- The existing Supabase database is external to the repository and is not
-  recreated automatically during local startup.
+- Supabase configuration and the baseline CRM schema are managed in
+  `supabase/config.toml` and `supabase/migrations`.
+- Applying the baseline migration recreates the CRM tables, constraints, indexes,
+  and RLS policies from an empty database. Existing disposable data must be
+  cleared before applying it to the current project.
 - The summary and recommendation functions currently return fixed placeholder
   text from `src/lib/services/ai-service.ts`; no external AI provider is
   configured.
@@ -132,9 +133,7 @@ npm run lint
 - There is no queue, background worker, scheduled job, or caching layer.
 - Error handling is basic: API routes return JSON status responses, while
   several client and database service paths log errors or show browser alerts.
-- Authentication checks are present in the dashboard and several API routes,
-  but authorization and ownership enforcement are not yet consistently
-  implemented across every customer operation.
-
-Database schema and migration management are planned as a separate improvement
-and are intentionally not configured here yet.
+- Authentication checks remain present in the dashboard and API routes, while
+  database ownership is enforced by the RLS policies in the baseline migration.
+- Generated Supabase database types are intentionally not included yet; they
+  should be generated after the baseline schema is applied and confirmed.
