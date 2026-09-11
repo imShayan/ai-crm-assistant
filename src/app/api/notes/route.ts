@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { addNote, getNotes } from "@/lib/services/note-db-service";
 import { getCurrentServerUser } from "@/lib/services/server-auth-service";
 import { getOwnedCustomer } from "@/lib/services/customer-authorization-service";
+import { apiError, apiSuccess } from "@/lib/api-response-server";
 
 function isPositiveSafeInteger(value: unknown): value is number {
   return (
@@ -29,17 +29,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export async function POST(request: Request) {
   const user = await getCurrentServerUser();
   if (!user) {
-    return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    return apiError("UNAUTHORIZED", "Unauthorized", 401);
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { success: false, message: "Request body must be valid JSON" },
-      { status: 400 },
-    );
+    return apiError("VALIDATION_ERROR", "Request body must be valid JSON", 400);
   }
 
   if (
@@ -48,18 +45,15 @@ export async function POST(request: Request) {
     typeof body.note !== "string" ||
     body.note.trim() === ""
   ) {
-    return NextResponse.json(
-      { success: false, message: "customer_id and a non-empty note are required" },
-      { status: 400 },
-    );
+    return apiError("VALIDATION_ERROR", "customer_id and a non-empty note are required", 400);
   }
 
   const { customer, error } = await getOwnedCustomer(body.customer_id, user.id);
   if (error) {
-    return NextResponse.json({ success: false }, { status: 500 });
+    return apiError("DATABASE_ERROR", "Unable to verify customer ownership", 500);
   }
   if (!customer) {
-    return NextResponse.json({ success: false, message: "Customer not found" }, { status: 404 });
+    return apiError("NOT_FOUND", "Customer not found", 404);
   }
 
   const { data: newNote, error: noteError } = await addNote({
@@ -69,46 +63,37 @@ export async function POST(request: Request) {
   });
 
   if (noteError || !newNote) {
-    return NextResponse.json({ success: false }, { status: 500 });
+    return apiError("DATABASE_ERROR", "Unable to create note", 500);
   }
 
-  return NextResponse.json({
-    success: true,
-    note: newNote,
-  });
+  return apiSuccess({ note: newNote });
 }
 
 export async function GET(request: Request) {
   const user = await getCurrentServerUser();
   if (!user) {
-    return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    return apiError("UNAUTHORIZED", "Unauthorized", 401);
   }
 
   const { searchParams } = new URL(request.url);
   const customerId = parseCustomerId(searchParams.get("customerId"));
 
   if (!customerId) {
-    return NextResponse.json(
-      { success: false, message: "Invalid customer ID" },
-      { status: 400 },
-    );
+    return apiError("VALIDATION_ERROR", "Invalid customer ID", 400);
   }
 
   const { customer, error } = await getOwnedCustomer(customerId, user.id);
   if (error) {
-    return NextResponse.json({ success: false }, { status: 500 });
+    return apiError("DATABASE_ERROR", "Unable to verify customer ownership", 500);
   }
   if (!customer) {
-    return NextResponse.json({ success: false, message: "Customer not found" }, { status: 404 });
+    return apiError("NOT_FOUND", "Customer not found", 404);
   }
 
   const { data: notes, error: notesError } = await getNotes(customerId, user.id);
   if (notesError || !notes) {
-    return NextResponse.json({ success: false }, { status: 500 });
+    return apiError("DATABASE_ERROR", "Unable to load notes", 500);
   }
 
-  return NextResponse.json({
-    success: true,
-    notes: notes,
-  });
+  return apiSuccess({ notes });
 }

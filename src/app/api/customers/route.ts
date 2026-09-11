@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCustomers , addCustomer, deleteCustomer, updateCustomer } from "@/lib/services/customer-db-service"
 import { getCurrentServerUser } from "@/lib/services/server-auth-service";
+import { apiError, apiSuccess } from "@/lib/api-response-server";
 
 const customerFields = ["name", "email", "company", "status"] as const;
 const supportedStatuses = ["Active", "Pending", "Inactive"] as const;
@@ -71,18 +71,15 @@ export async function GET() {
     const user = await getCurrentServerUser();
 
     if (!user) {
-        return NextResponse.json(
-            { success: false, message: "Unauthorized" },
-            { status: 401 }
-        );
+        return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
     const { data: customers, error } = await getCustomers(user.id);
     if (error || !customers) {
-      return NextResponse.json({ success: false }, { status: 500 });
+      return apiError("DATABASE_ERROR", "Unable to load customers", 500);
     }
 
-    return NextResponse.json(customers);
+    return apiSuccess({ customers });
 }
 
 export async function POST(request: Request) {
@@ -90,19 +87,13 @@ export async function POST(request: Request) {
   const validation = validateCustomerBody(body, true);
 
   if (!validation.data) {
-    return NextResponse.json(
-      { success: false, message: validation.message },
-      { status: 400 }
-    );
+    return apiError("VALIDATION_ERROR", validation.message ?? "Invalid customer", 400);
   }
 
   const user = await getCurrentServerUser();
 
   if (!user) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
-    );
+    return apiError("UNAUTHORIZED", "Unauthorized", 401);
   }
 
   const { data: newCustomer, error } = await addCustomer({
@@ -111,23 +102,17 @@ export async function POST(request: Request) {
   });
 
   if (error || !newCustomer) {
-    return NextResponse.json({ success: false }, { status: 500 });
+    return apiError("DATABASE_ERROR", "Unable to create customer", 500);
   }
 
-  return NextResponse.json({
-    success: true,
-    customer: newCustomer,
-  });
+  return apiSuccess({ customer: newCustomer });
 }
 
 export async function DELETE(request: Request) {
   const user = await getCurrentServerUser();
 
   if (!user) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
-    );
+    return apiError("UNAUTHORIZED", "Unauthorized", 401);
   }
 
   const { searchParams } = new URL(request.url);
@@ -135,24 +120,18 @@ export async function DELETE(request: Request) {
   const customerId = Number(id);
 
   if (!id || !/^\d+$/.test(id) || !Number.isSafeInteger(customerId) || customerId <= 0) {
-    return NextResponse.json(
-      { success: false, message: "Invalid customer ID" },
-      { status: 400 }
-    );
+    return apiError("VALIDATION_ERROR", "Invalid customer ID", 400);
   }
 
   const { data: deleted, error } = await deleteCustomer(customerId, user.id);
   if (error) {
-    return NextResponse.json({ success: false }, { status: 500 });
+    return apiError("DATABASE_ERROR", "Unable to delete customer", 500);
   }
 
   if (deleted) {
-    return NextResponse.json({ success: true });
+    return apiSuccess({ deleted: true });
   } else {
-    return NextResponse.json(
-      { success: false, message: "Customer not found" },
-      { status: 404 }
-    );
+    return apiError("NOT_FOUND", "Customer not found", 404);
   }
 }
 
@@ -160,10 +139,7 @@ export async function PUT(request: Request) {
   const user = await getCurrentServerUser();
 
   if (!user) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 }
-    );
+    return apiError("UNAUTHORIZED", "Unauthorized", 401);
   }
 
   const { searchParams } = new URL(request.url);
@@ -171,20 +147,14 @@ export async function PUT(request: Request) {
   const customerId = Number(id);
 
   if (!id || !/^\d+$/.test(id) || !Number.isSafeInteger(customerId) || customerId <= 0) {
-    return NextResponse.json(
-      { success: false, message: "Invalid customer ID" },
-      { status: 400 }
-    );
+    return apiError("VALIDATION_ERROR", "Invalid customer ID", 400);
   }
 
   const body = await parseJsonBody(request);
   const validation = validateCustomerBody(body, false);
 
   if (!validation.data) {
-    return NextResponse.json(
-      { success: false, message: validation.message },
-      { status: 400 }
-    );
+    return apiError("VALIDATION_ERROR", validation.message ?? "Invalid customer", 400);
   }
 
   const { data: updatedCustomer, error } = await updateCustomer(
@@ -193,18 +163,12 @@ export async function PUT(request: Request) {
     validation.data,
   );
   if (error) {
-    return NextResponse.json({ success: false }, { status: 500 });
+    return apiError("DATABASE_ERROR", "Unable to update customer", 500);
   }
 
   if (updatedCustomer) {
-    return NextResponse.json({
-      success: true,
-      customer: updatedCustomer,
-    });
+    return apiSuccess({ customer: updatedCustomer });
   } else {
-    return NextResponse.json(
-      { success: false, message: "Customer not found" },
-      { status: 404 }
-    );
+    return apiError("NOT_FOUND", "Customer not found", 404);
   }
 }

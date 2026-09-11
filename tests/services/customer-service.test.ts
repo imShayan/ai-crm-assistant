@@ -21,7 +21,10 @@ describe("customer client service", () => {
       status: "Active",
     };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
-      new Response(JSON.stringify([customer]), { status: 200 }),
+      new Response(JSON.stringify({
+        success: true,
+        data: { customers: [customer] },
+      }), { status: 200 }),
     ));
 
     await expect(getCustomers()).resolves.toEqual([customer]);
@@ -32,7 +35,10 @@ describe("customer client service", () => {
       "fetch",
       vi.fn().mockImplementation(() =>
         Promise.resolve(
-          new Response(JSON.stringify({ success: false, message: "Customer not found" }), {
+          new Response(JSON.stringify({
+            success: false,
+            error: { code: "NOT_FOUND", message: "Customer not found" },
+          }), {
             status: 404,
           }),
         ),

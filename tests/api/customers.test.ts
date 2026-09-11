@@ -51,7 +51,10 @@ describe("customer CRUD route", () => {
     const response = await customersRoute.GET();
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual([customer]);
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: { customers: [customer] },
+    });
     expect(mocks.getCustomers).toHaveBeenCalledWith(user.id);
   });
 
@@ -74,11 +77,14 @@ describe("customer CRUD route", () => {
     );
 
     expect(createResponse.status).toBe(200);
-    expect((await createResponse.json()).customer).toEqual(customer);
+    expect((await createResponse.json()).data.customer).toEqual(customer);
     expect(updateResponse.status).toBe(200);
-    expect((await updateResponse.json()).customer).toEqual(customer);
+    expect((await updateResponse.json()).data.customer).toEqual(customer);
     expect(deleteResponse.status).toBe(200);
-    expect(await deleteResponse.json()).toEqual({ success: true });
+    expect(await deleteResponse.json()).toEqual({
+      success: true,
+      data: { deleted: true },
+    });
   });
 
   it("preserves authentication and validation failures", async () => {
@@ -136,6 +142,9 @@ describe("customer CRUD route", () => {
     expect(createResponse.status).toBe(500);
     expect(deleteResponse.status).toBe(500);
     expect(updateResponse.status).toBe(500);
-    expect((await createResponse.json()).success).toBe(false);
+    expect((await createResponse.json())).toEqual({
+      success: false,
+      error: { code: "DATABASE_ERROR", message: "Unable to create customer" },
+    });
   });
 });

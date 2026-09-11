@@ -1,3 +1,5 @@
+import { readApiResponse } from "@/lib/api-response";
+
 export async function createNote(
   customerId: number,
   note: string
@@ -13,10 +15,10 @@ export async function createNote(
     }),
   });
 
-  return response.json();
+  return readApiResponse<{ note: Record<string, unknown> }>(response);
 }
 
 export async function getNotes(customerId: number) {
   const response = await fetch(`/api/notes?customerId=${customerId}`);
-  return response.json();
+  return readApiResponse<{ notes: Array<{ note: string; created_at: string }> }>(response);
 }   
