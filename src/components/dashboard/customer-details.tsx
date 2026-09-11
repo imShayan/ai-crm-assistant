@@ -8,15 +8,50 @@ import { useEffect, useState } from "react";
 
 type Props = {
   customer: Customer;
-  notes: any[];
+  notes: CustomerNote[];
   onAddNote: (customerId: number, note: string) => void;
 };
+
+export type CustomerNote = {
+  note: string;
+  created_at: string;
+};
+
+type TimelineItem = {
+  type: "note" | "summary";
+  content: string;
+  created_at: string;
+};
+
+export function buildTimeline(
+  notes: CustomerNote[],
+  summary?: { summary?: string; created_at?: string } | null,
+): TimelineItem[] {
+  const timelineItems: TimelineItem[] = notes.map((note) => ({
+    type: "note",
+    content: note.note,
+    created_at: note.created_at,
+  }));
+
+  if (summary?.summary && summary.created_at) {
+    timelineItems.push({
+      type: "summary",
+      content: summary.summary,
+      created_at: summary.created_at,
+    });
+  }
+
+  return timelineItems.sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+}
 
 export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
   const [newNote, setNewNote] = useState("");
   const [summary, setSummary] = useState("");
   const [recommendation, setRecommendation] = useState("");
-  const [timeline, setTimeline] = useState<any[]>([]);
+  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
 
   useEffect(() => {
     loadSummary();
@@ -56,36 +91,19 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
   };
 
   async function loadSummary() {
-    const result = await fetchSummary(customer.id);
+    let savedSummary: { summary?: string; created_at?: string } | null = null;
 
-    const timelineItems = [];
-
-    // Notes
-    for (const note of notes) {
-      timelineItems.push({
-        type: "note",
-        content: note.note,
-        created_at: note.created_at,
-      });
+    try {
+      const result = await fetchSummary(customer.id);
+      savedSummary = result.summary;
+      if (savedSummary) {
+        setSummary(String(savedSummary.summary ?? ""));
+      }
+    } catch (error) {
+      console.error("Error loading summary:", error);
     }
 
-    // Summary
-    if (result.summary) {
-      setSummary(String(result.summary.summary ?? ""));
-
-      timelineItems.push({
-        type: "summary",
-        content: result.summary.summary,
-        created_at: result.summary.created_at,
-      });
-    }
-
-    timelineItems.sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
-
-    setTimeline(timelineItems);
+    setTimeline(buildTimeline(notes, savedSummary));
   }
 
   async function loadRecommendation() {
