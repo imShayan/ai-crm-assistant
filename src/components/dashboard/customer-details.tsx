@@ -4,7 +4,7 @@ import {
   fetchRecommendation,
 } from "@/lib/services/recommendations-service";
 import { Customer } from "@/types/customer";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   customer: Customer;
@@ -22,6 +22,10 @@ type TimelineItem = {
   content: string;
   created_at: string;
 };
+
+function isMissingResourceError(error: unknown, resource: string) {
+  return error instanceof Error && error.message === `${resource} not found`;
+}
 
 export function buildTimeline(
   notes: CustomerNote[],
@@ -52,6 +56,7 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
   const [summary, setSummary] = useState("");
   const [recommendation, setRecommendation] = useState("");
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const summaryRequestId = useRef(0);
 
   useEffect(() => {
     loadSummary();
@@ -91,26 +96,37 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
   };
 
   async function loadSummary() {
+    const requestId = ++summaryRequestId.current;
     let savedSummary: { summary?: string; created_at?: string } | null = null;
 
     try {
       const result = await fetchSummary(customer.id);
       savedSummary = result.summary;
-      if (savedSummary) {
+      if (savedSummary && requestId === summaryRequestId.current) {
         setSummary(String(savedSummary.summary ?? ""));
       }
     } catch (error) {
-      console.error("Error loading summary:", error);
+      if (!isMissingResourceError(error, "Summary")) {
+        console.error("Error loading summary:", error);
+      }
     }
 
-    setTimeline(buildTimeline(notes, savedSummary));
+    if (requestId === summaryRequestId.current) {
+      setTimeline(buildTimeline(notes, savedSummary));
+    }
   }
 
   async function loadRecommendation() {
-    const result = await fetchRecommendation(customer.id);
+    try {
+      const result = await fetchRecommendation(customer.id);
 
-    if (result.recommendation) {
-      setRecommendation(String(result.recommendation.recommendation ?? ""));
+      if (result.recommendation) {
+        setRecommendation(String(result.recommendation.recommendation ?? ""));
+      }
+    } catch (error) {
+      if (!isMissingResourceError(error, "Recommendation")) {
+        console.error("Error loading recommendation:", error);
+      }
     }
   }
 
