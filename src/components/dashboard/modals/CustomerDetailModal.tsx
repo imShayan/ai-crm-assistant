@@ -2,8 +2,7 @@ import Modal from "@/components/ui/modal";
 import { Customer } from "@/types/customer";
 import CustomerDetail from "@/components/dashboard/customer-details";
 type Notes ={
-    id:number
-    content:string
+    note:string
     created_at:string
 }
 type CustomerDetailModalProps ={

@@ -18,10 +18,11 @@ export async function getNotes(
     console.error(error);
   }
 
-  return {
-    data: data ?? [],
-    error: error ? new Error(error.message) : null,
-  };
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  return { data: data ?? [], error: null };
 }
 
 export async function addNote(note: {
@@ -40,5 +41,9 @@ export async function addNote(note: {
     return { data: null, error: new Error(error.message) };
   }
 
-  return { data: data[0] ?? null, error: null };
+  if (!data?.[0]) {
+    return { data: null, error: new Error("Note insert returned no row") };
+  }
+
+  return { data: data[0], error: null };
 }

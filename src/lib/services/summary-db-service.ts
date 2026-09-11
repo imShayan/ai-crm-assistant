@@ -16,10 +16,13 @@ export async function saveSummary(summary:  {
         console.error(error);
     }
 
-    return {
-        data: data?.[0] ?? null,
-        error: error ? new Error(error.message) : null,
-    };
+    if (error) {
+        return { data: null, error: new Error(error.message) };
+    }
+    if (!data?.[0]) {
+        return { data: null, error: new Error("Summary insert returned no row") };
+    }
+    return { data: data[0], error: null };
 };
 
 
@@ -39,8 +42,8 @@ export async function getSummary(
         console.error(error);
     }   
     
-    return {
-        data: data?.[0] ?? null,
-        error: error ? new Error(error.message) : null,
-    };
+    if (error) {
+        return { data: null, error: new Error(error.message) };
+    }
+    return { data: data?.[0] ?? null, error: null };
 };

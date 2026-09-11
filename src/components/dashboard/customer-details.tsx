@@ -35,7 +35,7 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
     try {
       const generatedSummary = await generateSummary(customer.id);
 
-      setSummary(generatedSummary.summary);
+      setSummary(String(generatedSummary.summary ?? ""));
 
       loadSummary();
     } catch (error) {
@@ -47,11 +47,9 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
     try {
       const generatedRecommendation = await generateRecommendation(customer.id);
 
-      if (generatedRecommendation.success) {
-        setRecommendation(
-          generatedRecommendation.recommendation.recommendation,
-        );
-      }
+      setRecommendation(
+        String(generatedRecommendation.recommendation.recommendation ?? ""),
+      );
     } catch (error) {
       console.error("Error generating recommendation:", error);
     }
@@ -72,8 +70,8 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
     }
 
     // Summary
-    if (result.success && result.summary) {
-      setSummary(result.summary.summary);
+    if (result.summary) {
+      setSummary(String(result.summary.summary ?? ""));
 
       timelineItems.push({
         type: "summary",
@@ -93,8 +91,8 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
   async function loadRecommendation() {
     const result = await fetchRecommendation(customer.id);
 
-    if (result.success && result.recommendation) {
-      setRecommendation(result.recommendation.recommendation);
+    if (result.recommendation) {
+      setRecommendation(String(result.recommendation.recommendation ?? ""));
     }
   }
 

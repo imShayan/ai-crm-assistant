@@ -28,7 +28,15 @@ export async function addCustomer(
     console.error("Error adding customer:", error);
   }
 
-  return { data: data?.[0] ?? null, error: error ? new Error(error.message) : null };
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  if (!data?.[0]) {
+    return { data: null, error: new Error("Customer insert returned no row") };
+  }
+
+  return { data: data[0], error: null };
 }
 
 export async function deleteCustomer(
@@ -68,5 +76,13 @@ export async function updateCustomer(
     console.error("Error updating customer:", error);
   }
 
-  return { data: data?.[0] ?? null, error: error ? new Error(error.message) : null };
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  if (!data?.[0]) {
+    return { data: null, error: new Error("Customer update returned no row") };
+  }
+
+  return { data: data[0], error: null };
 }

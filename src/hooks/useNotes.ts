@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { getNotes, createNote } from "@/lib/services/note-service";
+
+type CustomerNote = {
+  note: string;
+  created_at: string;
+};
+
 export function useNotes() {
   //state
-  const [customerNotes, setCustomerNotes] = useState([]);
+  const [customerNotes, setCustomerNotes] = useState<CustomerNote[]>([]);
   //function
   const addNote = async (customerId: number, note: string) => {
     try {

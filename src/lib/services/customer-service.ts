@@ -1,17 +1,14 @@
 import type { Customer } from "@/types/customer";
+import { readApiResponse } from "@/lib/api-response";
 
 async function readResponse<T>(response: Response): Promise<T> {
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.message ?? "Customer request failed");
-  }
-
-  return result;
+  return readApiResponse<T>(response);
 }
 
 export async function getCustomers() {
   const response = await fetch("/api/customers");
-  return readResponse<Customer[]>(response);
+  const result = await readResponse<{ customers: Customer[] }>(response);
+  return result.customers;
 }
 
 export async function addCustomer(customer: {
@@ -27,14 +24,19 @@ export async function addCustomer(customer: {
     },
     body: JSON.stringify(customer),
   });
-  return readResponse<{ success: boolean; customer?: Customer }>(response);
+  return readResponse<{ customer: Customer }>(response).then((data) => ({
+    success: true,
+    customer: data.customer,
+  }));
 }
 
 export async function deleteCustomer(id: number) {
   const response = await fetch(`/api/customers?id=${id}`, {
     method: "DELETE",
   });
-  return readResponse<{ success: boolean }>(response);
+  return readResponse<{ deleted: boolean }>(response).then((data) => ({
+    success: data.deleted,
+  }));
 }
 
 export async function editCustomer(id: number, customer: {
@@ -50,5 +52,8 @@ export async function editCustomer(id: number, customer: {
     },
     body: JSON.stringify(customer),
   });
-  return readResponse<{ success: boolean; customer?: Customer }>(response);
+  return readResponse<{ customer: Customer }>(response).then((data) => ({
+    success: true,
+    customer: data.customer,
+  }));
 }
