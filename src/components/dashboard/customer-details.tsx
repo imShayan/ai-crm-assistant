@@ -56,12 +56,10 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
   const [summary, setSummary] = useState("");
   const [recommendation, setRecommendation] = useState("");
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [summaryError, setSummaryError] = useState("");
   const summaryRequestId = useRef(0);
-
-  useEffect(() => {
-    loadSummary();
-    loadRecommendation();
-  }, [customer.id, notes]);
+  const activeCustomerId = useRef(customer.id);
 
   const handleAddNote = () => {
     if (!newNote.trim()) return;
@@ -72,14 +70,28 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
   };
 
   const handleGenerateSummary = async () => {
+    if (isGeneratingSummary) return;
+
+    const customerId = customer.id;
+    setIsGeneratingSummary(true);
+    setSummaryError("");
+
     try {
-      const generatedSummary = await generateSummary(customer.id);
+      const generatedSummary = await generateSummary(customerId);
 
-      setSummary(String(generatedSummary.summary ?? ""));
-
-      loadSummary();
+      if (activeCustomerId.current === customerId) {
+        setSummary(String(generatedSummary.summary ?? ""));
+        await loadSummary();
+      }
     } catch (error) {
       console.error("Error generating summary:", error);
+      setSummaryError(
+        error instanceof Error
+          ? error.message
+          : "Unable to generate a summary",
+      );
+    } finally {
+      setIsGeneratingSummary(false);
     }
   };
 
@@ -130,6 +142,14 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
     }
   }
 
+  useEffect(() => {
+    activeCustomerId.current = customer.id;
+    loadSummary();
+    // These loaders intentionally update component state after their requests complete.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadRecommendation();
+  }, [customer.id, notes]);
+
   return (
     <div className="space-y-6">
       {/* Customer Header */}
@@ -157,10 +177,14 @@ export default function CustomerDetail({ customer, notes, onAddNote }: Props) {
 
         <button
           onClick={handleGenerateSummary}
+          disabled={isGeneratingSummary}
           className="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
-          Generate Summary
+          {isGeneratingSummary ? "Generating..." : "Generate Summary"}
         </button>
+        {summaryError ? (
+          <p className="mt-2 text-sm text-red-600">{summaryError}</p>
+        ) : null}
       </div>
       {/* AI Recommendation */}
       <div>

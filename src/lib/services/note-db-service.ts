@@ -5,7 +5,7 @@ import type { DatabaseResult } from "./database-result";
 export async function getNotes(
   customerId: number,
   userId: string,
-): Promise<DatabaseResult<Array<{ note: string }>>> {
+): Promise<DatabaseResult<Array<{ note: string; created_at: string }>>> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("customer_notes")

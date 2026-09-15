@@ -58,18 +58,31 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.getCurrentServerUser.mockResolvedValue(user);
   mocks.getOwnedCustomer.mockResolvedValue({
-    customer: { id: 42 },
+    customer: {
+      id: 42,
+      name: "Ada Lovelace",
+      company: "Analytical Engines",
+      status: "Active",
+    },
     error: null,
   });
   mocks.getNotes.mockResolvedValue({
-    data: [{ note: "Discussed pricing" }],
+    data: [{ note: "Discussed pricing", created_at: "2026-09-12T00:00:00Z" }],
     error: null,
   });
   mocks.addNote.mockResolvedValue({
     data: { id: 1, customer_id: 42, user_id: user.id },
     error: null,
   });
-  mocks.generateSummary.mockResolvedValue("Summary");
+  mocks.generateSummary.mockResolvedValue({
+    structured: {
+      summary: "Summary",
+      key_points: ["Discussed pricing"],
+      next_step: "Follow up",
+      insufficient_context: false,
+    },
+    text: "Summary",
+  });
   mocks.saveSummary.mockResolvedValue({ data: { summary: "Summary" }, error: null });
   mocks.generateRecommendation.mockResolvedValue("Recommendation");
   mocks.saveRecommendation.mockResolvedValue({
@@ -184,7 +197,14 @@ describe("summary authorization", () => {
 
     expect(response.status).toBe(200);
     expect(mocks.getOwnedCustomer).toHaveBeenCalledWith(42, "user-a");
-    expect(mocks.generateSummary).toHaveBeenCalledWith(["Discussed pricing"]);
+    expect(mocks.generateSummary).toHaveBeenCalledWith({
+      customer: {
+        name: "Ada Lovelace",
+        company: "Analytical Engines",
+        status: "Active",
+      },
+      notes: [{ note: "Discussed pricing", created_at: "2026-09-12T00:00:00Z" }],
+    });
     expect(mocks.saveSummary).toHaveBeenCalledWith({
       customer_id: 42,
       user_id: "user-a",

@@ -31,7 +31,7 @@ describe("getOwnedCustomer", () => {
     const result = await getOwnedCustomer(42, "user-a");
 
     expect(mocks.from).toHaveBeenCalledWith("customers");
-    expect(mocks.select).toHaveBeenCalledWith("id");
+    expect(mocks.select).toHaveBeenCalledWith("id, name, company, status");
     expect(mocks.eq).toHaveBeenNthCalledWith(1, "id", 42);
     expect(mocks.eq).toHaveBeenNthCalledWith(2, "user_id", "user-a");
     expect(mocks.maybeSingle).toHaveBeenCalled();
