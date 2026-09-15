@@ -1,6 +1,6 @@
 import {getNotes } from "../../../lib/services/note-db-service";
 import { getCurrentServerUser } from "@/lib/services/server-auth-service";
-import { generateSummary } from "@/lib/services/ai-service";
+import { AiServiceError, generateSummary } from "@/lib/services/ai-service";
 import { saveSummary } from "@/lib/services/summary-db-service";
 import { apiError, apiSuccess } from "@/lib/api-response-server";
 import {getSummary} from "@/lib/services/summary-db-service";
@@ -53,12 +53,28 @@ export async function POST(request: Request) {
         return apiError("DATABASE_ERROR", "Unable to load notes", 500);
     }
 
-    const summaryText = await generateSummary(notes.map(note => note.note));
+    let generatedSummary: Awaited<ReturnType<typeof generateSummary>>;
+    try {
+        generatedSummary = await generateSummary({
+            customer: {
+                name: customer.name,
+                company: customer.company,
+                status: customer.status,
+            },
+            notes,
+        });
+    } catch (error) {
+        if (error instanceof AiServiceError) {
+            const status = error.code === "INSUFFICIENT_CONTEXT" ? 422 : 503;
+            return apiError(error.code, error.message, status);
+        }
+        throw error;
+    }
   
     const { data: savedSummary, error: summaryError } = await saveSummary({
         customer_id: customerId,
         user_id: user.id,
-        summary: summaryText
+        summary: generatedSummary.text
     });
 
     if (summaryError || !savedSummary) {

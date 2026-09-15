@@ -94,7 +94,13 @@ the application:
 ```text
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+GROQ_API_KEY=your-groq-server-side-api-key
+# Optional; defaults to openai/gpt-oss-20b
+GROQ_MODEL=openai/gpt-oss-20b
 ```
+
+`GROQ_API_KEY` must remain server-side. The browser calls the application's
+summary API route; it never calls Groq directly.
 
 Install dependencies:
 
@@ -126,10 +132,14 @@ npm run lint
 - Applying the baseline migration recreates the CRM tables, constraints, indexes,
   and RLS policies from an empty database. Existing disposable data must be
   cleared before applying it to the current project.
-- The summary and recommendation functions currently return fixed placeholder
-  text from `src/lib/services/ai-service.ts`; no external AI provider is
-  configured.
-- There are no automated test files or test script in `package.json`.
+- Customer summary generation calls Groq's OpenAI-compatible API from the
+  server, sends bounded authorized customer context, requests strict JSON
+  Schema output, validates it with Zod, and persists only validated summaries.
+- Recommendations still return fixed placeholder text from
+  `src/lib/services/ai-service.ts`; recommendation AI is intentionally out of
+  scope for the first real AI workflow.
+- Automated tests cover API authorization/failure behavior and the summary
+  provider adapter. Tests mock the provider and never make external LLM calls.
 - There is no queue, background worker, scheduled job, or caching layer.
 - Error handling is basic: API routes return JSON status responses, while
   several client and database service paths log errors or show browser alerts.
